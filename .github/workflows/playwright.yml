@@ -1,0 +1,38 @@
+name: Playwright Smoke Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    name: Browser smoke regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Replace with npm ci after committing package-lock.json.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Type-check
+        run: npm run typecheck
+      - name: Run smoke tests
+        run: npm run test:smoke
+      - name: Upload HTML report and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
